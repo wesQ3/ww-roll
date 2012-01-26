@@ -1,32 +1,37 @@
-use 5.12.0;
-use Getopt::Long;
+#!/usr/bin/env perl
+
+use 5.14.1;
+use warnings;
+
+use Getopt::Long::Descriptive;
 use Games::Dice::Advanced;
 
-my $lowest_re_roll = 10;
-my $lowest_success = 8;
-my $verbose = undef;
-GetOptions(
-   'verbose' => \$verbose,
-   'success|s=i' => \$lowest_success,
-   're-roll|r=i' => \$lowest_re_roll,
+my ($opt, $usage) = describe_options(
+  'send-sms %o <some-arg>',
+  [ 'reroll|r=i',  'Minimum to reroll',         { default => 10 }],
+  [ 'dice|x=i',    'Amount of dice to roll',    { default => 1 } ],
+  [ 'success|s=i', 'Minimum value for success', { default => 8 } ],
+  [],
+  [ 'verbose|v',   'verbose'                                     ],
+  [ 'help|h',     'view help'                                    ],
 );
 
-my $d10 = Games::Dice::Advanced->new('d10');
+print($usage->text), exit if $opt->help;
 
-my $count = $ARGV[0] || 1;
-say "Rolling $count dice...";
-my @result =  roll($count);
+printf "Expected successes: %.2f\n", $opt->dice*(11 - $opt->success)/($opt->reroll - 1);
 
-say join ' ', sort {$b <=> $a} @result if $verbose;
-
-my $successes = scalar grep {$_ >= $lowest_success} @result;
+say 'Rolling ' . $opt->dice . ' dice...';
+my @result =  roll($opt->dice);
+say join ' ', sort {$b <=> $a} @result if $opt->verbose;
+my $successes = scalar grep {$_ >= $opt->success} @result;
 say "$successes successes";
 
 sub roll {
+   state $d10 = Games::Dice::Advanced->new('d10');
    my $count = shift;
-   say "--rolling: $count dice" if $verbose;
-   my @this_roll = map $d10->roll, 1..$count;
-   my $next_count = scalar grep {$_ >= $lowest_re_roll} @this_roll;
+   say "--rolling: $count dice" if $opt->verbose;
+   my @this_roll = map $d10->roll, 1..$opt->dice;
+   my $next_count = scalar grep {$_ >= $opt->reroll} @this_roll;
    push @this_roll, roll($next_count) if $next_count;
    return @this_roll
 }
