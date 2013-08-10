@@ -3,6 +3,7 @@
 use 5.14.1;
 use warnings;
 
+use Term::ANSIColor;
 use Getopt::Long::Descriptive;
 use Games::Dice::Advanced;
 
@@ -28,21 +29,21 @@ if ($opt->accumulate) {
       $super_total += attempt();
       $attempt_count++;
    }
-   say "Succeeded in $attempt_count attempts";
+   say colored "Succeeded in $attempt_count attempts", 'bold';
 } elsif ($opt->total) {
    say sprintf 'Totalling %d attempts',$opt->total;
    my $super_total = 0;
    $super_total += attempt() for 1..$opt->total;
-   say "$super_total total successes";
+   say colored "$super_total total successes", 'bold';
 } else {
    printf "Expected successes: %.2f\n", $opt->dice*(11 - $opt->success)/($opt->reroll - 1);
    attempt()
 }
 
 sub attempt {
-   say 'Rolling ' . $opt->dice . ' dice...';
+   say colored 'Rolling ' . $opt->dice . ' dice...', 'yellow';
    my @result =  roll($opt->dice);
-   say join ' ', sort {$b <=> $a} @result if $opt->verbose;
+   say render_result(\@result) if $opt->verbose;
    my $successes = scalar grep {$_ >= $opt->success} @result;
    say "$successes successes";
    return $successes
@@ -51,9 +52,19 @@ sub attempt {
 sub roll {
    state $d10 = Games::Dice::Advanced->new('d10');
    my $count = shift;
-   say "--rolling: $count dice" if $opt->verbose;
+   say colored("  roll: $count dice", 'cyan') if $opt->verbose;
    my @this_roll = map $d10->roll, 1..$opt->dice;
    my $next_count = scalar grep {$_ >= $opt->reroll} @this_roll;
    push @this_roll, roll($next_count) if $next_count;
    return @this_roll
 }
+
+sub render_result {
+   my @result = sort {$b <=> $a} @{ shift() };
+   my @good = grep $_ >= $opt->success, @result;
+   my @bad  = grep $_ <  $opt->success, @result;
+   return join ' ',
+      colored(join(' ', @good), 'green'),
+      colored(join(' ', @bad),  'red');
+}
+
