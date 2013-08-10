@@ -12,12 +12,14 @@ my ($opt, $usage) = describe_options(
   [ 'dice|x=i',    'Amount of dice to roll',    { default => 1 } ],
   [ 'success|s=i', 'Minimum value for success', { default => 8 } ],
   [ 'accumulate|a=i', 'Count attempts to reach required successes', { default => 0 } ],
+  [ 'total|t=i', 'Total successes in limited attempts', { default => 0 } ],
   [],
   [ 'verbose|v',   'verbose'                                     ],
   [ 'help|h',     'view help'                                    ],
 );
 
 print($usage->text), exit if $opt->help;
+say("Can't do that."), exit if $opt->accumulate && $opt->total;
 
 if ($opt->accumulate) {
    say sprintf 'Accumulating %d successes',$opt->accumulate;
@@ -27,6 +29,11 @@ if ($opt->accumulate) {
       $attempt_count++;
    }
    say "Succeeded in $attempt_count attempts";
+} elsif ($opt->total) {
+   say sprintf 'Totalling %d attempts',$opt->total;
+   my $super_total = 0;
+   $super_total += attempt() for 1..$opt->total;
+   say "$super_total total successes";
 } else {
    printf "Expected successes: %.2f\n", $opt->dice*(11 - $opt->success)/($opt->reroll - 1);
    attempt()
