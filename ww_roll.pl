@@ -8,12 +8,12 @@ use Getopt::Long::Descriptive;
 use Games::Dice::Advanced;
 
 my ($opt, $usage) = describe_options(
-  'ww_roll %o <some-arg>',
+  "$0 %o <some-arg>",
   [ 'reroll|r=i',  'Minimum to reroll',         { default => 10 }],
   [ 'dice|x=i',    'Amount of dice to roll',    { default => 1 } ],
   [ 'success|s=i', 'Minimum value for success', { default => 8 } ],
-  [ 'accumulate|a=i', 'Count attempts to reach required successes', { default => 0 } ],
-  [ 'total|t=i', 'Total successes in limited attempts', { default => 0 } ],
+  [ 'accumulate|a=i','Count attempts to reach required successes'],
+  [ 'total|t=i', 'Total successes in limited attempts'           ],
   [],
   [ 'verbose|v',   'verbose'                                     ],
   [ 'help|h',     'view help'                                    ],
